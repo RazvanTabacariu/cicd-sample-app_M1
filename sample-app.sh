@@ -1,6 +1,8 @@
 #!/bin/bash
 set -euo pipefail
+# Verwijder oude builddirectory als die bestaat
 
+rm -rf tempdir
 mkdir tempdir
 mkdir tempdir/templates
 mkdir tempdir/static
