@@ -1,15 +1,12 @@
-node {
-    stage('Preparation') {
-        checkout scm  // <-- pulls the latest commit
-        catchError(buildResult: 'SUCCESS') {
-            sh 'docker stop samplerunning || true'
-            sh 'docker rm samplerunning || true'
-        }
-    }
-    stage('Build') {
-        build 'SampleApp'
-    }
-    stage('Results') {
-        build 'SampleAppCURL'
-    }
-}
+set -euo pipefail
+
+echo "[INFO] Cleaning old container and image..."
+docker stop samplerunning || true
+docker rm samplerunning || true
+docker rmi sampleapp -f || true
+
+echo "[INFO] Building new Docker image from latest source..."
+docker build --no-cache -t sampleapp .
+
+echo "[INFO] Starting new container..."
+docker run -d -p 5050:5050 --name samplerunning sampleapp
