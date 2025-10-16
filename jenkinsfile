@@ -1,67 +1,14 @@
-pipeline {
-    agent any
-
-    // 🔁 Automatische trigger bij elke push naar GitHub
-    triggers {
-        githubPush()
-    }
-
-    stages {
-
-        stage('Preparation') {
-            steps {
-                script {
-                    echo '🧹 Opruimen van oude container (indien aanwezig)...'
-                    catchError(buildResult: 'SUCCESS') {
-                        sh 'docker stop samplerunning || true'
-                        sh 'docker rm samplerunning || true'
-                    }
-                }
-            }
-        }
-
-        stage('Build') {
-            steps {
-                script {
-                    echo '🏗️  Start build job: SampleApp'
-                    build job: 'SampleApp'
-                }
-            }
-        }
-
-        stage('Test') {
-            steps {
-                script {
-                    echo '🧪  Uitvoeren van acceptatietest: SampleAppCURL'
-                    build job: 'SampleAppCURL'
-                }
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                script {
-                    echo '🚀  Nieuwe versie van de applicatie wordt gedeployed...'
-                    sh '''
-                        docker stop samplerunning || true
-                        docker rm samplerunning || true
-                        docker build -t sampleapp .
-                        docker run -d -p 5050:5050 --name samplerunning sampleapp
-                    '''
-                }
-            }
+node {
+    stage('Preparation') {
+        catchError(buildResult: 'SUCCESS') {
+            sh 'docker stop samplerunning'
+            sh 'docker rm samplerunning'
         }
     }
-
-    post {
-        success {
-            echo '✅ Deploy succesvol uitgevoerd! Nieuwe versie is live op http://192.168.56.20:5050'
-        }
-        failure {
-            echo '❌ Deploy mislukt. Controleer de Jenkins logs voor details.'
-        }
-        always {
-            sh 'docker image prune -f || true'
-        }
+    stage('Build') {
+        build 'SampleApp'
+    }
+    stage('Results') {
+        build 'SampleAppCURL'
     }
 }
