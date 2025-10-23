@@ -7,7 +7,5 @@ node {
     stage('Build') {
         build 'SampleApp'
     }
-    stage('Results') {
-        build 'SampleAppCURL'
-    }
+
 }
